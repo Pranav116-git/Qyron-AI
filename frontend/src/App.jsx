@@ -132,6 +132,62 @@ export default function App() {
     }
   }
 
+  const handleRegenerate = async () => {
+    if (loading || !activeConversation) return
+
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
+    if (!lastUserMsg) return
+
+    setError(null)
+    setLoading(true)
+
+    setConversations(prev => {
+      const updated = updateConversation(prev, activeId, c => ({
+        ...c,
+        messages: c.messages.slice(0, -1),
+      }))
+      saveConversations(updated)
+      return updated
+    })
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: lastUserMsg.content }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Something went wrong')
+      }
+
+      const assistantMsg = { role: 'assistant', content: data.response }
+
+      setConversations(prev => {
+        const updated = updateConversation(prev, activeId, c => ({
+          ...c,
+          messages: [...c.messages, assistantMsg],
+        }))
+        saveConversations(updated)
+        return updated
+      })
+    } catch (err) {
+      setError(err.message)
+      setConversations(prev => {
+        const updated = updateConversation(prev, activeId, c => ({
+          ...c,
+          messages: [...c.messages, lastUserMsg],
+        }))
+        saveConversations(updated)
+        return updated
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handlePromptClick = (text) => {
     handleSend(text)
   }
@@ -158,7 +214,7 @@ export default function App() {
       />
 
       <main className="main">
-        <ChatArea messages={messages} loading={loading} error={error} onPromptClick={handlePromptClick} />
+        <ChatArea messages={messages} loading={loading} error={error} onPromptClick={handlePromptClick} onRegenerate={handleRegenerate} />
         <MessageInput onSend={handleSend} disabled={loading} />
       </main>
     </div>

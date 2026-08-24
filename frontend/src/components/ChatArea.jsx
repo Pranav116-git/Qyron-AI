@@ -35,7 +35,7 @@ function CopyButton({ text }) {
   )
 }
 
-function MessageActions({ content }) {
+function MessageActions({ content, onRegenerate, isLast, loading }) {
   const [state, setState] = useState('copy')
 
   const handleCopy = async () => {
@@ -58,6 +58,20 @@ function MessageActions({ content }) {
       >
         {state === 'copied' ? 'Copied \u2713' : state === 'error' ? 'Failed' : 'Copy'}
       </button>
+      {isLast && (
+        <button
+          className="message-regenerate-btn"
+          onClick={onRegenerate}
+          disabled={loading}
+          aria-label="Regenerate response"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 4 23 10 17 10" />
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+          </svg>
+          Regenerate
+        </button>
+      )}
     </div>
   )
 }
@@ -101,7 +115,7 @@ function MarkdownContent({ content }) {
   )
 }
 
-export default function ChatArea({ messages, loading, error, onPromptClick }) {
+export default function ChatArea({ messages, loading, error, onPromptClick, onRegenerate }) {
   const bottomRef = useRef(null)
   const isEmpty = messages.length === 0
 
@@ -141,23 +155,31 @@ export default function ChatArea({ messages, loading, error, onPromptClick }) {
   return (
     <div className="chat-area">
       <div className="messages-container">
-        {messages.map((msg, i) => (
-          <div key={i} className={`message ${msg.role}`}>
-            <div className="message-avatar">
-              {msg.role === 'user' ? 'S' : 'Q'}
+        {messages.map((msg, i) => {
+          const isLastAssistant = msg.role === 'assistant' && i === messages.length - 1 && !loading
+          return (
+            <div key={i} className={`message ${msg.role}`}>
+              <div className="message-avatar">
+                {msg.role === 'user' ? 'S' : 'Q'}
+              </div>
+              <div className="message-content">
+                {msg.role === 'assistant' ? (
+                  <>
+                    <MarkdownContent content={msg.content} />
+                    <MessageActions
+                      content={msg.content}
+                      onRegenerate={onRegenerate}
+                      isLast={isLastAssistant}
+                      loading={loading}
+                    />
+                  </>
+                ) : (
+                  msg.content
+                )}
+              </div>
             </div>
-            <div className="message-content">
-              {msg.role === 'assistant' ? (
-                <>
-                  <MarkdownContent content={msg.content} />
-                  <MessageActions content={msg.content} />
-                </>
-              ) : (
-                msg.content
-              )}
-            </div>
-          </div>
-        ))}
+          )
+        })}
 
         {loading && (
           <div className="message assistant">
