@@ -1,4 +1,7 @@
 import { useRef, useEffect } from 'react'
+import Markdown from 'react-markdown'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 const EXAMPLE_PROMPTS = [
   { id: 1, text: 'Explain how AI works in simple terms', icon: '💡' },
@@ -6,6 +9,42 @@ const EXAMPLE_PROMPTS = [
   { id: 3, text: 'What are the best practices for React?', icon: '⚛️' },
   { id: 4, text: 'Help me debug this code', icon: '🐛' },
 ]
+
+function MarkdownContent({ content }) {
+  return (
+    <Markdown
+      components={{
+        code({ className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || '')
+          const code = String(children).replace(/\n$/, '')
+          if (match) {
+            return (
+              <SyntaxHighlighter
+                style={vscDarkPlus}
+                language={match[1]}
+                PreTag="div"
+                customStyle={{
+                  margin: '12px 0',
+                  borderRadius: 'var(--radius)',
+                  fontSize: '13px',
+                }}
+              >
+                {code}
+              </SyntaxHighlighter>
+            )
+          }
+          return (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          )
+        },
+      }}
+    >
+      {content}
+    </Markdown>
+  )
+}
 
 export default function ChatArea({ messages, loading, error, onPromptClick }) {
   const bottomRef = useRef(null)
@@ -53,7 +92,11 @@ export default function ChatArea({ messages, loading, error, onPromptClick }) {
               {msg.role === 'user' ? 'S' : 'Q'}
             </div>
             <div className="message-content">
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <MarkdownContent content={msg.content} />
+              ) : (
+                msg.content
+              )}
             </div>
           </div>
         ))}
