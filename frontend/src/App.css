@@ -671,6 +671,23 @@ ul {
   background: var(--accent-hover);
 }
 
+.stop-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--red);
+  color: white;
+  flex-shrink: 0;
+  transition: background var(--transition);
+}
+
+.stop-btn:hover {
+  background: #dc2626;
+}
+
 .input-hint {
   margin-top: 8px;
   font-size: 12px;

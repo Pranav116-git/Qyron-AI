@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
 import MessageInput from './components/MessageInput'
@@ -41,6 +41,8 @@ export default function App() {
   const [activeId, setActiveId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const abortControllerRef = useRef(null)
+  const lastRemovedAssistantRef = useRef(null)
 
   const activeConversation = conversations.find(c => c.id === activeId)
   const messages = activeConversation ? activeConversation.messages : []
@@ -49,6 +51,11 @@ export default function App() {
     setConversations(updated)
     saveConversations(updated)
   }, [])
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort()
+    abortControllerRef.current = null
+  }
 
   const handleSend = async (text) => {
     let currentId = activeId
@@ -64,6 +71,9 @@ export default function App() {
     setError(null)
     setLoading(true)
 
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setConversations(prev => {
       const updated = updateConversation(prev, currentId, c => ({
         ...c,
@@ -78,6 +88,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text }),
+        signal: controller.signal,
       })
 
       const data = await res.json()
@@ -97,6 +108,9 @@ export default function App() {
         return updated
       })
     } catch (err) {
+      if (err.name === 'AbortError') {
+        return
+      }
       setError(err.message)
       setConversations(prev => {
         const updated = updateConversation(prev, currentId, c => ({
@@ -108,6 +122,7 @@ export default function App() {
       })
     } finally {
       setLoading(false)
+      abortControllerRef.current = null
     }
   }
 
@@ -138,8 +153,14 @@ export default function App() {
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
     if (!lastUserMsg) return
 
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant')
+    lastRemovedAssistantRef.current = lastAssistantMsg || null
+
     setError(null)
     setLoading(true)
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
     setConversations(prev => {
       const updated = updateConversation(prev, activeId, c => ({
@@ -155,6 +176,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: lastUserMsg.content }),
+        signal: controller.signal,
       })
 
       const data = await res.json()
@@ -174,6 +196,21 @@ export default function App() {
         return updated
       })
     } catch (err) {
+      if (err.name === 'AbortError') {
+        const removed = lastRemovedAssistantRef.current
+        if (removed) {
+          setConversations(prev => {
+            const updated = updateConversation(prev, activeId, c => ({
+              ...c,
+              messages: [...c.messages, removed],
+            }))
+            saveConversations(updated)
+            return updated
+          })
+        }
+        lastRemovedAssistantRef.current = null
+        return
+      }
       setError(err.message)
       setConversations(prev => {
         const updated = updateConversation(prev, activeId, c => ({
@@ -185,6 +222,7 @@ export default function App() {
       })
     } finally {
       setLoading(false)
+      abortControllerRef.current = null
     }
   }
 
@@ -215,7 +253,7 @@ export default function App() {
 
       <main className="main">
         <ChatArea messages={messages} loading={loading} error={error} onPromptClick={handlePromptClick} onRegenerate={handleRegenerate} />
-        <MessageInput onSend={handleSend} disabled={loading} />
+        <MessageInput onSend={handleSend} onStop={handleStop} disabled={loading} />
       </main>
     </div>
   )

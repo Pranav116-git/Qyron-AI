@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
-export default function MessageInput({ onSend, disabled }) {
+export default function MessageInput({ onSend, onStop, disabled }) {
   const [input, setInput] = useState('')
   const textareaRef = useRef(null)
 
@@ -38,22 +38,24 @@ export default function MessageInput({ onSend, disabled }) {
           onKeyDown={handleKeyDown}
           disabled={disabled}
         />
-        <button
-          className={`send-btn ${input.trim() && !disabled ? 'active' : ''}`}
-          onClick={handleSubmit}
-          disabled={!input.trim() || disabled}
-        >
-          {disabled ? (
-            <svg className="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        {disabled ? (
+          <button className="stop-btn" onClick={onStop} aria-label="Stop generating">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="2" />
             </svg>
-          ) : (
+          </button>
+        ) : (
+          <button
+            className={`send-btn ${input.trim() ? 'active' : ''}`}
+            onClick={handleSubmit}
+            disabled={!input.trim()}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 2L11 13" />
               <path d="M22 2L15 22L11 13L2 9L22 2Z" />
             </svg>
-          )}
-        </button>
+          </button>
+        )}
       </div>
       <p className="input-hint">Qyron AI can make mistakes. Verify important information.</p>
     </div>
