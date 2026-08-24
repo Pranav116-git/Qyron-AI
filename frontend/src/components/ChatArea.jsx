@@ -35,6 +35,33 @@ function CopyButton({ text }) {
   )
 }
 
+function MessageActions({ content }) {
+  const [state, setState] = useState('copy')
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setState('copied')
+      setTimeout(() => setState('copy'), 2000)
+    } catch {
+      setState('error')
+      setTimeout(() => setState('copy'), 2000)
+    }
+  }
+
+  return (
+    <div className="message-actions">
+      <button
+        className={`message-copy-btn ${state === 'copied' ? 'copied' : ''} ${state === 'error' ? 'error' : ''}`}
+        onClick={handleCopy}
+        aria-label="Copy response"
+      >
+        {state === 'copied' ? 'Copied \u2713' : state === 'error' ? 'Failed' : 'Copy'}
+      </button>
+    </div>
+  )
+}
+
 function MarkdownContent({ content }) {
   return (
     <Markdown
@@ -121,7 +148,10 @@ export default function ChatArea({ messages, loading, error, onPromptClick }) {
             </div>
             <div className="message-content">
               {msg.role === 'assistant' ? (
-                <MarkdownContent content={msg.content} />
+                <>
+                  <MarkdownContent content={msg.content} />
+                  <MessageActions content={msg.content} />
+                </>
               ) : (
                 msg.content
               )}
