@@ -31,7 +31,10 @@ function updateConversation(conversations, id, updater) {
   return conversations.map(c => {
     if (c.id !== id) return c
     const updated = updater(c)
-    return { ...updated, title: deriveTitle(updated.messages) }
+    const title = c.title === 'New Chat'
+      ? deriveTitle(updated.messages)
+      : c.title
+    return { ...updated, title }
   })
 }
 
@@ -147,6 +150,12 @@ export default function App() {
     }
   }
 
+  const handleRenameChat = (id, newTitle) => {
+    const trimmed = newTitle.trim()
+    if (!trimmed) return
+    persist(conversations.map(c => c.id === id ? { ...c, title: trimmed } : c))
+  }
+
   const handleRegenerate = async () => {
     if (loading || !activeConversation) return
 
@@ -249,6 +258,7 @@ export default function App() {
         activeId={activeId}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
+        onRenameChat={handleRenameChat}
       />
 
       <main className="main">
