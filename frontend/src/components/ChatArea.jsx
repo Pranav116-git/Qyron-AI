@@ -1,3 +1,5 @@
+import { useRef, useEffect } from 'react'
+
 const EXAMPLE_PROMPTS = [
   { id: 1, text: 'Explain how AI works in simple terms', icon: '💡' },
   { id: 2, text: 'Write a Python function to sort a list', icon: '🐍' },
@@ -5,8 +7,13 @@ const EXAMPLE_PROMPTS = [
   { id: 4, text: 'Help me debug this code', icon: '🐛' },
 ]
 
-export default function ChatArea({ messages, onPromptClick }) {
+export default function ChatArea({ messages, loading, error, onPromptClick }) {
+  const bottomRef = useRef(null)
   const isEmpty = messages.length === 0
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
 
   if (isEmpty) {
     return (
@@ -50,6 +57,31 @@ export default function ChatArea({ messages, onPromptClick }) {
             </div>
           </div>
         ))}
+
+        {loading && (
+          <div className="message assistant">
+            <div className="message-avatar">Q</div>
+            <div className="message-content">
+              <div className="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4M12 16h.01" />
+            </svg>
+            {error}
+          </div>
+        )}
+
+        <div ref={bottomRef} />
       </div>
     </div>
   )

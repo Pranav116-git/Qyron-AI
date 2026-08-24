@@ -4,20 +4,48 @@ import ChatArea from './components/ChatArea'
 import MessageInput from './components/MessageInput'
 import './App.css'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [messages, setMessages] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const handleSend = (text) => {
+  const handleSend = async (text) => {
     setMessages(prev => [...prev, { role: 'user', content: text }])
+    setError(null)
+    setLoading(true)
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Something went wrong')
+      }
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleNewChat = () => {
     setMessages([])
+    setError(null)
+    setLoading(false)
   }
 
   const handlePromptClick = (text) => {
-    setMessages([{ role: 'user', content: text }])
+    handleSend(text)
   }
 
   return (
@@ -39,8 +67,8 @@ export default function App() {
       />
 
       <main className="main">
-        <ChatArea messages={messages} onPromptClick={handlePromptClick} />
-        <MessageInput onSend={handleSend} />
+        <ChatArea messages={messages} loading={loading} error={error} onPromptClick={handlePromptClick} />
+        <MessageInput onSend={handleSend} disabled={loading} />
       </main>
     </div>
   )
