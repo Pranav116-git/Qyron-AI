@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
 import MessageInput from './components/MessageInput'
@@ -62,7 +62,7 @@ function backfillTimestamps(messages) {
 }
 
 export default function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768)
   const [conversations, setConversations] = useState(() => {
     const loaded = loadConversations()
     return loaded.map(conv => ({
@@ -75,6 +75,19 @@ export default function App() {
   const [error, setError] = useState(null)
   const abortControllerRef = useRef(null)
   const lastRemovedAssistantRef = useRef(null)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768
+      setIsMobile(mobile)
+      if (!mobile) {
+        setSidebarOpen(true)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const activeConversation = conversations.find(c => c.id === activeId)
   const messages = activeConversation ? activeConversation.messages : []
@@ -235,6 +248,7 @@ export default function App() {
     setActiveId(null)
     setError(null)
     setLoading(false)
+    if (isMobile) setSidebarOpen(false)
   }
 
   const handleSelectChat = (id) => {
@@ -353,6 +367,10 @@ export default function App() {
         </svg>
       </button>
 
+      {isMobile && sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       <Sidebar
         isOpen={sidebarOpen}
         onNewChat={handleNewChat}
@@ -361,6 +379,7 @@ export default function App() {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
         onRenameChat={handleRenameChat}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <main className="main">

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
-export default function Sidebar({ isOpen, onNewChat, conversations, activeId, onSelectChat, onDeleteChat, onRenameChat }) {
+export default function Sidebar({ isOpen, onNewChat, conversations, activeId, onSelectChat, onDeleteChat, onRenameChat, onClose }) {
   const [hoveredId, setHoveredId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState('')
@@ -8,6 +8,7 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
   const editInputRef = useRef(null)
   const searchInputRef = useRef(null)
   const previousTitleRef = useRef('')
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
   useEffect(() => {
     if (editingId && editInputRef.current) {
@@ -114,7 +115,7 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
               className={`chat-item ${activeId === chat.id ? 'active' : ''} ${hoveredId === chat.id ? 'hovered' : ''} ${editingId === chat.id ? 'editing' : ''}`}
               onMouseEnter={() => setHoveredId(chat.id)}
               onMouseLeave={() => setHoveredId(null)}
-              onClick={() => { if (editingId !== chat.id) onSelectChat(chat.id) }}
+              onClick={() => { if (editingId !== chat.id) { onSelectChat(chat.id); if (onClose && window.innerWidth <= 768) onClose() } }}
             >
               <svg className="chat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -134,7 +135,7 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
               ) : (
                 <span className="chat-title">{chat.title}</span>
               )}
-              {hoveredId === chat.id && editingId !== chat.id && (
+              {(isTouchDevice || hoveredId === chat.id) && editingId !== chat.id && (
                 <>
                   <button
                     className="chat-rename"
