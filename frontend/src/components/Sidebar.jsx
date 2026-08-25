@@ -4,7 +4,9 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
   const [hoveredId, setHoveredId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [editValue, setEditValue] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const editInputRef = useRef(null)
+  const searchInputRef = useRef(null)
   const previousTitleRef = useRef('')
 
   useEffect(() => {
@@ -13,6 +15,12 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
       editInputRef.current.select()
     }
   }, [editingId])
+
+  const filteredConversations = searchQuery.trim()
+    ? conversations.filter(c =>
+        c.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : conversations
 
   const startEditing = useCallback((chat) => {
     previousTitleRef.current = chat.title
@@ -59,6 +67,34 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
         </button>
       </div>
 
+      {conversations.length > 0 && (
+        <div className="sidebar-search">
+          <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            ref={searchInputRef}
+            className="search-input"
+            type="text"
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              className="search-clear"
+              onClick={() => { setSearchQuery(''); searchInputRef.current?.focus() }}
+              aria-label="Clear search"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+
       <nav className="sidebar-nav">
         <div className="nav-label">Recent</div>
         <ul className="chat-list">
@@ -67,7 +103,12 @@ export default function Sidebar({ isOpen, onNewChat, conversations, activeId, on
               <span className="chat-title">No conversations yet</span>
             </li>
           )}
-          {conversations.map(chat => (
+          {conversations.length > 0 && filteredConversations.length === 0 && (
+            <li className="chat-item empty-hint">
+              <span className="chat-title">No conversations found</span>
+            </li>
+          )}
+          {filteredConversations.map(chat => (
             <li
               key={chat.id}
               className={`chat-item ${activeId === chat.id ? 'active' : ''} ${hoveredId === chat.id ? 'hovered' : ''} ${editingId === chat.id ? 'editing' : ''}`}

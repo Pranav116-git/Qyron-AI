@@ -38,9 +38,38 @@ function updateConversation(conversations, id, updater) {
   })
 }
 
+function now() {
+  return Date.now()
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return ''
+  const d = new Date(ts)
+  const h = d.getHours()
+  const m = d.getMinutes().toString().padStart(2, '0')
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12}:${m} ${period}`
+}
+
+function backfillTimestamps(messages) {
+  let base = now() - messages.length * 60000
+  return messages.map((msg) => {
+    if (msg.timestamp) return msg
+    base += 60000
+    return { ...msg, timestamp: base }
+  })
+}
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [conversations, setConversations] = useState(loadConversations)
+  const [conversations, setConversations] = useState(() => {
+    const loaded = loadConversations()
+    return loaded.map(conv => ({
+      ...conv,
+      messages: backfillTimestamps(conv.messages),
+    }))
+  })
   const [activeId, setActiveId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -70,7 +99,7 @@ export default function App() {
       setActiveId(currentId)
     }
 
-    const userMsg = { role: 'user', content: text }
+    const userMsg = { role: 'user', content: text, timestamp: now() }
     setError(null)
     setLoading(true)
 
@@ -100,7 +129,7 @@ export default function App() {
         throw new Error(data.detail || 'Something went wrong')
       }
 
-      const assistantMsg = { role: 'assistant', content: data.response }
+      const assistantMsg = { role: 'assistant', content: data.response, timestamp: now() }
 
       setConversations(prev => {
         const updated = updateConversation(prev, currentId, c => ({
@@ -123,6 +152,79 @@ export default function App() {
         saveConversations(updated)
         return updated
       })
+    } finally {
+      setLoading(false)
+      abortControllerRef.current = null
+    }
+  }
+
+  const handleEditMessage = async (messageIndex, newContent) => {
+    if (loading || !activeConversation) return
+
+    const trimmed = newContent.trim()
+    if (!trimmed) return
+
+    const msg = messages[messageIndex]
+    if (!msg || msg.role !== 'user') return
+
+    const hasAssistantAfter = messageIndex + 1 < messages.length && messages[messageIndex + 1]?.role === 'assistant'
+
+    setError(null)
+    setLoading(true)
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
+    setConversations(prev => {
+      const updated = updateConversation(prev, activeId, c => {
+        let newMsgs
+        if (hasAssistantAfter) {
+          newMsgs = [
+            ...c.messages.slice(0, messageIndex),
+            { ...c.messages[messageIndex], content: trimmed, timestamp: now() },
+            ...c.messages.slice(messageIndex + 2),
+          ]
+        } else {
+          newMsgs = [
+            ...c.messages.slice(0, messageIndex),
+            { ...c.messages[messageIndex], content: trimmed, timestamp: now() },
+          ]
+        }
+        return { ...c, messages: newMsgs }
+      })
+      saveConversations(updated)
+      return updated
+    })
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: trimmed }),
+        signal: controller.signal,
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Something went wrong')
+      }
+
+      const assistantMsg = { role: 'assistant', content: data.response, timestamp: now() }
+
+      setConversations(prev => {
+        const updated = updateConversation(prev, activeId, c => ({
+          ...c,
+          messages: [...c.messages, assistantMsg],
+        }))
+        saveConversations(updated)
+        return updated
+      })
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        return
+      }
+      setError(err.message)
     } finally {
       setLoading(false)
       abortControllerRef.current = null
@@ -194,7 +296,7 @@ export default function App() {
         throw new Error(data.detail || 'Something went wrong')
       }
 
-      const assistantMsg = { role: 'assistant', content: data.response }
+      const assistantMsg = { role: 'assistant', content: data.response, timestamp: now() }
 
       setConversations(prev => {
         const updated = updateConversation(prev, activeId, c => ({
@@ -262,7 +364,15 @@ export default function App() {
       />
 
       <main className="main">
-        <ChatArea messages={messages} loading={loading} error={error} onPromptClick={handlePromptClick} onRegenerate={handleRegenerate} />
+        <ChatArea
+          messages={messages}
+          loading={loading}
+          error={error}
+          onPromptClick={handlePromptClick}
+          onRegenerate={handleRegenerate}
+          onEditMessage={handleEditMessage}
+          formatTimestamp={formatTimestamp}
+        />
         <MessageInput onSend={handleSend} onStop={handleStop} disabled={loading} />
       </main>
     </div>

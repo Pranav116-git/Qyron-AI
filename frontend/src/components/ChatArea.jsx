@@ -115,13 +115,99 @@ function MarkdownContent({ content }) {
   )
 }
 
-export default function ChatArea({ messages, loading, error, onPromptClick, onRegenerate }) {
+function EditableUserMessage({ content, onSave, onCancel }) {
+  const [value, setValue] = useState(content)
+  const textareaRef = useRef(null)
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+      textareaRef.current.focus()
+      textareaRef.current.setSelectionRange(
+        textareaRef.current.value.length,
+        textareaRef.current.value.length
+      )
+    }
+  }, [])
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [value])
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      const trimmed = value.trim()
+      if (trimmed) {
+        onSave(trimmed)
+      }
+    } else if (e.key === 'Escape') {
+      onCancel()
+    }
+  }
+
+  const handleSubmit = () => {
+    const trimmed = value.trim()
+    if (trimmed) {
+      onSave(trimmed)
+    }
+  }
+
+  return (
+    <div className="message-edit-container">
+      <textarea
+        ref={textareaRef}
+        className="message-edit-input"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        rows={1}
+      />
+      <div className="message-edit-actions">
+        <button className="edit-cancel-btn" onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          className="edit-save-btn"
+          onClick={handleSubmit}
+          disabled={!value.trim()}
+        >
+          Save & Send
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default function ChatArea({ messages, loading, error, onPromptClick, onRegenerate, onEditMessage, formatTimestamp }) {
   const bottomRef = useRef(null)
   const isEmpty = messages.length === 0
+  const [editingIndex, setEditingIndex] = useState(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  const latestUserIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') return i
+    }
+    return -1
+  })()
+
+  const handleEditSave = (newContent) => {
+    if (editingIndex === null) return
+    onEditMessage(editingIndex, newContent)
+    setEditingIndex(null)
+  }
+
+  const handleEditCancel = () => {
+    setEditingIndex(null)
+  }
 
   if (isEmpty) {
     return (
@@ -157,6 +243,9 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
       <div className="messages-container">
         {messages.map((msg, i) => {
           const isLastAssistant = msg.role === 'assistant' && i === messages.length - 1 && !loading
+          const isLatestUser = msg.role === 'user' && i === latestUserIndex
+          const isEditing = editingIndex === i
+
           return (
             <div key={i} className={`message ${msg.role}`}>
               <div className="message-avatar">
@@ -173,8 +262,32 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
                       loading={loading}
                     />
                   </>
+                ) : isEditing ? (
+                  <EditableUserMessage
+                    content={msg.content}
+                    onSave={handleEditSave}
+                    onCancel={handleEditCancel}
+                  />
                 ) : (
-                  msg.content
+                  <>
+                    <div className="user-message-text">{msg.content}</div>
+                    {isLatestUser && !loading && editingIndex === null && (
+                      <button
+                        className="message-edit-btn"
+                        onClick={() => setEditingIndex(i)}
+                        aria-label="Edit message"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          <path d="m15 5 4 4" />
+                        </svg>
+                        Edit
+                      </button>
+                    )}
+                  </>
+                )}
+                {msg.timestamp && (
+                  <span className="message-timestamp">{formatTimestamp(msg.timestamp)}</span>
                 )}
               </div>
             </div>
