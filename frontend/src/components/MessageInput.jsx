@@ -40,7 +40,7 @@ export default function MessageInput({ onSend, onStop, disabled }) {
         />
         {disabled ? (
           <button className="stop-btn" onClick={onStop} aria-label="Stop generating">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="6" width="12" height="12" rx="2" />
             </svg>
           </button>
@@ -49,10 +49,10 @@ export default function MessageInput({ onSend, onStop, disabled }) {
             className={`send-btn ${input.trim() ? 'active' : ''}`}
             onClick={handleSubmit}
             disabled={!input.trim()}
+            aria-label="Send message"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 2L11 13" />
-              <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </button>
         )}

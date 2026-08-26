@@ -2,12 +2,61 @@ import { useRef, useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { QyronStaticOrb, QyronAnimatedOrb } from './QyronOrb'
 
 const EXAMPLE_PROMPTS = [
-  { id: 1, text: 'Explain how AI works in simple terms', icon: '💡' },
-  { id: 2, text: 'Write a Python function to sort a list', icon: '🐍' },
-  { id: 3, text: 'What are the best practices for React?', icon: '⚛️' },
-  { id: 4, text: 'Help me debug this code', icon: '🐛' },
+  {
+    id: 1,
+    text: 'Explain how AI works in simple terms',
+    type: 'amber',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+        <path d="M9 18h6" />
+        <path d="M10 22h4" />
+      </svg>
+    ),
+  },
+  {
+    id: 2,
+    text: 'Write a Python function to sort a list',
+    type: 'green',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+  },
+  {
+    id: 3,
+    text: 'What are the best practices for React?',
+    type: 'purple',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="2" />
+        <ellipse cx="12" cy="12" rx="10" ry="4" />
+        <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)" />
+        <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)" />
+      </svg>
+    ),
+  },
+  {
+    id: 4,
+    text: 'Help me debug this code',
+    type: 'blue',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="6" width="8" height="12" rx="4" />
+        <line x1="6" y1="9" x2="2" y2="8" />
+        <line x1="6" y1="12" x2="2" y2="12" />
+        <line x1="6" y1="15" x2="2" y2="16" />
+        <line x1="18" y1="9" x2="22" y2="8" />
+        <line x1="18" y1="12" x2="22" y2="12" />
+        <line x1="18" y1="15" x2="22" y2="16" />
+      </svg>
+    ),
+  },
 ]
 
 function CopyButton({ text }) {
@@ -30,7 +79,19 @@ function CopyButton({ text }) {
       onClick={handleCopy}
       aria-label="Copy code"
     >
-      {state === 'copied' ? 'Copied \u2713' : state === 'error' ? 'Failed' : 'Copy'}
+      {state === 'copied' ? (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Copied</span>
+        </>
+      ) : state === 'error' ? (
+        'Failed'
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copy</span>
+        </>
+      )}
     </button>
   )
 }
@@ -56,7 +117,19 @@ function MessageActions({ content, onRegenerate, isLast, loading }) {
         onClick={handleCopy}
         aria-label="Copy response"
       >
-        {state === 'copied' ? 'Copied \u2713' : state === 'error' ? 'Failed' : 'Copy'}
+        {state === 'copied' ? (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Copied</span>
+          </>
+        ) : state === 'error' ? (
+          'Failed'
+        ) : (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>Copy</span>
+          </>
+        )}
       </button>
       {isLast && (
         <button
@@ -65,11 +138,11 @@ function MessageActions({ content, onRegenerate, isLast, loading }) {
           disabled={loading}
           aria-label="Regenerate response"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="23 4 23 10 17 10" />
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
           </svg>
-          Regenerate
+          <span>Regenerate</span>
         </button>
       )}
     </div>
@@ -86,15 +159,19 @@ function MarkdownContent({ content }) {
           if (match) {
             return (
               <div className="code-block">
-                <CopyButton text={code} />
+                <div className="code-header">
+                  <span className="code-lang">{match[1]}</span>
+                  <CopyButton text={code} />
+                </div>
                 <SyntaxHighlighter
                   style={vscDarkPlus}
                   language={match[1]}
                   PreTag="div"
                   customStyle={{
                     margin: 0,
-                    borderRadius: 'var(--radius)',
+                    borderRadius: '0 0 var(--radius-md) var(--radius-md)',
                     fontSize: '13px',
+                    background: 'var(--bg-code)',
                   }}
                 >
                   {code}
@@ -213,13 +290,16 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
     return (
       <div className="chat-area">
         <div className="empty-state">
-          <div className="empty-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
+          <div className="empty-orb-container">
+            <QyronAnimatedOrb size={96} className="empty-orb" alt="Qyron AI Orb" />
           </div>
-          <h1 className="empty-title">Qyron AI</h1>
-          <p className="empty-subtitle">Your intelligent coding assistant. Ask anything about code, debugging, or development.</p>
+          <h1 className="empty-title">
+            <span className="brand-qyron">Qyron</span> <span className="brand-ai">AI</span>
+          </h1>
+          <p className="empty-subtitle">
+            Your intelligent coding assistant. Ask anything about code,<br className="desktop-br" />
+            debugging, or development.
+          </p>
 
           <div className="prompt-grid">
             {EXAMPLE_PROMPTS.map(prompt => (
@@ -228,7 +308,9 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
                 className="prompt-card"
                 onClick={() => onPromptClick(prompt.text)}
               >
-                <span className="prompt-icon">{prompt.icon}</span>
+                <div className={`prompt-icon-wrapper prompt-icon-${prompt.type}`}>
+                  {prompt.icon}
+                </div>
                 <span className="prompt-text">{prompt.text}</span>
               </button>
             ))}
@@ -249,7 +331,11 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
           return (
             <div key={i} className={`message ${msg.role}`}>
               <div className="message-avatar">
-                {msg.role === 'user' ? 'S' : 'Q'}
+                {msg.role === 'user' ? (
+                  <span className="user-avatar-text">U</span>
+                ) : (
+                  <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" />
+                )}
               </div>
               <div className="message-content">
                 {msg.role === 'assistant' ? (
@@ -277,11 +363,11 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
                         onClick={() => setEditingIndex(i)}
                         aria-label="Edit message"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                           <path d="m15 5 4 4" />
                         </svg>
-                        Edit
+                        <span>Edit</span>
                       </button>
                     )}
                   </>
@@ -296,7 +382,9 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
 
         {loading && (
           <div className="message assistant">
-            <div className="message-avatar">Q</div>
+            <div className="message-avatar">
+              <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" />
+            </div>
             <div className="message-content">
               <div className="typing-indicator">
                 <span></span>
@@ -313,7 +401,7 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
               <circle cx="12" cy="12" r="10" />
               <path d="M12 8v4M12 16h.01" />
             </svg>
-            {error}
+            <span>{error}</span>
           </div>
         )}
 
