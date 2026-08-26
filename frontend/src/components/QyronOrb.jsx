@@ -13,7 +13,7 @@ export function QyronStaticOrb({ size = 28, className = '', alt = 'Qyron AI' }) 
 
   return (
     <img
-      src="/qyron-orb.png"
+      src={`${import.meta.env.BASE_URL}qyron-orb.png`}
       alt={alt}
       aria-hidden="true"
       className={className}
@@ -127,7 +127,7 @@ export function QyronAnimatedOrb({ size = 96, className = '', alt = 'Qyron AI Or
   return (
     <video
       ref={videoRef}
-      src="/qyron-orb-transparent.webm"
+      src={`${import.meta.env.BASE_URL}qyron-orb-transparent.webm`}
       autoPlay
       loop
       muted
