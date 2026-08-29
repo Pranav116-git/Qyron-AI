@@ -19,6 +19,14 @@ function saveConversations(conversations) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations))
 }
 
+function getUserName() {
+  try {
+    return localStorage.getItem('qyron-user-name') || ''
+  } catch {
+    return ''
+  }
+}
+
 function deriveTitle(messages) {
   const first = messages.find(m => m.role === 'user')
   if (!first) return 'New Chat'
@@ -148,11 +156,19 @@ export default function App() {
       return updated
     })
 
+    const existingMessages = activeConversation ? activeConversation.messages : []
+    const updatedHistory = [...existingMessages, userMsg]
+    const userName = getUserName()
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({
+          message: text,
+          messages: updatedHistory.map(m => ({ role: m.role, content: m.content })),
+          user_name: userName,
+        }),
         signal: controller.signal,
       })
 
@@ -200,31 +216,23 @@ export default function App() {
     const msg = messages[messageIndex]
     if (!msg || msg.role !== 'user') return
 
-    const hasAssistantAfter = messageIndex + 1 < messages.length && messages[messageIndex + 1]?.role === 'assistant'
-
     setError(null)
     setLoading(true)
 
     const controller = new AbortController()
     abortControllerRef.current = controller
 
+    const historyUpToEdit = [
+      ...messages.slice(0, messageIndex),
+      { role: 'user', content: trimmed, timestamp: now() },
+    ]
+    const userName = getUserName()
+
     setConversations(prev => {
-      const updated = updateConversation(prev, activeId, c => {
-        let newMsgs
-        if (hasAssistantAfter) {
-          newMsgs = [
-            ...c.messages.slice(0, messageIndex),
-            { ...c.messages[messageIndex], content: trimmed, timestamp: now() },
-            ...c.messages.slice(messageIndex + 2),
-          ]
-        } else {
-          newMsgs = [
-            ...c.messages.slice(0, messageIndex),
-            { ...c.messages[messageIndex], content: trimmed, timestamp: now() },
-          ]
-        }
-        return { ...c, messages: newMsgs }
-      })
+      const updated = updateConversation(prev, activeId, c => ({
+        ...c,
+        messages: historyUpToEdit,
+      }))
       saveConversations(updated)
       return updated
     })
@@ -233,7 +241,11 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({
+          message: trimmed,
+          messages: historyUpToEdit.map(m => ({ role: m.role, content: m.content })),
+          user_name: userName,
+        }),
         signal: controller.signal,
       })
 
@@ -295,8 +307,18 @@ export default function App() {
   const handleRegenerate = async () => {
     if (loading || !activeConversation) return
 
-    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
-    if (!lastUserMsg) return
+    let lastUserIndex = -1
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        lastUserIndex = i
+        break
+      }
+    }
+    if (lastUserIndex === -1) return
+
+    const lastUserMsg = messages[lastUserIndex]
+    const historyUpToUser = messages.slice(0, lastUserIndex + 1)
+    const userName = getUserName()
 
     const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant')
     lastRemovedAssistantRef.current = lastAssistantMsg || null
@@ -310,7 +332,7 @@ export default function App() {
     setConversations(prev => {
       const updated = updateConversation(prev, activeId, c => ({
         ...c,
-        messages: c.messages.slice(0, -1),
+        messages: historyUpToUser,
       }))
       saveConversations(updated)
       return updated
@@ -320,7 +342,11 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: lastUserMsg.content }),
+        body: JSON.stringify({
+          message: lastUserMsg.content,
+          messages: historyUpToUser.map(m => ({ role: m.role, content: m.content })),
+          user_name: userName,
+        }),
         signal: controller.signal,
       })
 
@@ -357,14 +383,18 @@ export default function App() {
         return
       }
       setError(err.message)
-      setConversations(prev => {
-        const updated = updateConversation(prev, activeId, c => ({
-          ...c,
-          messages: [...c.messages, lastUserMsg],
-        }))
-        saveConversations(updated)
-        return updated
-      })
+      const removed = lastRemovedAssistantRef.current
+      if (removed) {
+        setConversations(prev => {
+          const updated = updateConversation(prev, activeId, c => ({
+            ...c,
+            messages: [...c.messages, removed],
+          }))
+          saveConversations(updated)
+          return updated
+        })
+      }
+      lastRemovedAssistantRef.current = null
     } finally {
       setLoading(false)
       abortControllerRef.current = null
