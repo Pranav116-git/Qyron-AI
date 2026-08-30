@@ -152,7 +152,6 @@ Qyron-AI/
 │   ├── index.html                  # HTML entry point
 │   ├── package.json                # Frontend dependencies and scripts
 │   └── vite.config.js              # Vite config with dev proxy
-├── netlify.toml                    # Netlify configuration (alternative deployment)
 ├── render.yaml                     # Render backend deployment configuration
 ├── .gitignore
 └── README.md
