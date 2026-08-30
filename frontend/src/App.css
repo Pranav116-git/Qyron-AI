@@ -1478,17 +1478,18 @@ ul {
 }
 
 .typing-indicator span {
+  display: inline-block;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--text-muted);
-  animation: pulseDot 1.4s ease-in-out infinite;
-  will-change: transform, opacity, background-color;
+  animation: pulseDot 1.4s ease-in-out infinite !important;
+  will-change: transform, opacity;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: 0s; }
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+.typing-indicator span:nth-child(1) { animation-delay: 0s !important; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.18s !important; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.36s !important; }
 
 @keyframes pulseDot {
   0%, 60%, 100% {
@@ -1497,7 +1498,7 @@ ul {
     background: var(--text-muted);
   }
   30% {
-    transform: translateY(-2.5px);
+    transform: translateY(-3px);
     opacity: 1;
     background: var(--accent-purple-light);
   }
@@ -1690,5 +1691,9 @@ ul {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .typing-indicator span {
+    animation-duration: 1.4s !important;
+    animation-iteration-count: infinite !important;
   }
 }
