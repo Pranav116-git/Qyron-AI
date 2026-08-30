@@ -64,7 +64,7 @@ The application is built as a two-tier architecture: a static React frontend dep
 
 ## Screenshots
 
-> Screenshots can be added here.
+![Qyron AI Overview](qyyron-overview.png)
 
 ---
 
@@ -86,6 +86,8 @@ The application is built as a two-tier architecture: a static React frontend dep
 ---
 
 ## Architecture
+
+![Qyron AI Architecture](qyyron-architecture.png)
 
 ```
 ┌─────────────────────┐      ┌─────────────────────┐      ┌────────────┐      ┌─────────────────┐
