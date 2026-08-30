@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import Markdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { QyronStaticOrb, QyronAnimatedOrb } from './QyronOrb'
+import { QyronStaticOrb } from './QyronOrb'
 
 const EXAMPLE_PROMPTS = [
   {
@@ -289,13 +289,29 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
   if (isEmpty) {
     return (
       <div className="chat-area">
+        <div className="atmospheric-ring-system" aria-hidden="true">
+          <div className="atmospheric-glow" />
+          <div className="atmospheric-ring" />
+        </div>
+        <div className="dotted-grid-accent" aria-hidden="true" />
         <div className="empty-state">
-          <div className="empty-orb-container">
-            <QyronAnimatedOrb size={96} className="empty-orb" alt="Qyron AI Orb" />
-          </div>
           <h1 className="empty-title">
-            <span className="brand-qyron">Qyron</span> <span className="brand-ai">AI</span>
+            <span className="brand-qyron">Qyron</span>{' '}
+            <span className="brand-ai">
+              AI
+              <svg className="sparkle-icon" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" fill="url(#sparkle-grad)" />
+                <defs>
+                  <linearGradient id="sparkle-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#e9d5ff" />
+                    <stop offset="0.5" stopColor="#c084fc" />
+                    <stop offset="1" stopColor="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
           </h1>
+          <div className="title-underline-accent" aria-hidden="true" />
           <p className="empty-subtitle">
             Your intelligent coding assistant. Ask anything about code,<br className="desktop-br" />
             debugging, or development.
@@ -312,6 +328,12 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
                   {prompt.icon}
                 </div>
                 <span className="prompt-text">{prompt.text}</span>
+                <div className="prompt-arrow">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </div>
               </button>
             ))}
           </div>
@@ -334,7 +356,7 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
                 {msg.role === 'user' ? (
                   <span className="user-avatar-text">U</span>
                 ) : (
-                  <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" />
+                  <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" state={isLastAssistant && loading ? 'thinking' : 'idle'} />
                 )}
               </div>
               <div className="message-content">
@@ -381,9 +403,9 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
         })}
 
         {loading && (
-          <div className="message assistant">
+          <div className="message assistant message-thinking">
             <div className="message-avatar">
-              <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" />
+              <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" loading={true} state="thinking" />
             </div>
             <div className="message-content">
               <div className="typing-indicator">

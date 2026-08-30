@@ -27,7 +27,7 @@ export default function MessageInput({ onSend, onStop, disabled }) {
 
   return (
     <div className="input-area">
-      <div className="input-wrapper">
+      <div className={`input-wrapper ${disabled ? 'is-thinking' : ''}`}>
         <textarea
           ref={textareaRef}
           className="message-input"
@@ -57,7 +57,13 @@ export default function MessageInput({ onSend, onStop, disabled }) {
           </button>
         )}
       </div>
-      <p className="input-hint">Qyron AI can make mistakes. Verify important information.</p>
+      <p className="input-hint">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="disclaimer-shield">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg>
+        <span>Qyron AI can make mistakes. Verify important information.</span>
+      </p>
     </div>
   )
 }
