@@ -50,7 +50,6 @@
   --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
   --transition: 280ms cubic-bezier(0.22, 1, 0.36, 1);
   --transition-fast: 200ms cubic-bezier(0.22, 1, 0.36, 1);
-  --transition-smooth: 280ms cubic-bezier(0.22, 1, 0.36, 1);
   --transition-glow: 380ms cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Shadows */
@@ -190,8 +189,6 @@ ul {
 }
 
 [data-theme="light"] .sidebar {
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-default);
   box-shadow: 2px 0 16px rgba(15, 23, 42, 0.03);
 }
 
@@ -1572,17 +1569,6 @@ ul {
 
   .sidebar:not(.open) {
     margin-left: -100vw;
-  }
-
-  .empty-orb-container {
-    width: 70px;
-    height: 70px;
-    margin-bottom: 16px;
-  }
-
-  .empty-orb {
-    width: 68px;
-    height: 68px;
   }
 
   .empty-title {

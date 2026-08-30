@@ -21,13 +21,4 @@ export function QyronStaticOrb({ size = 28, className = '', alt = 'Qyron AI', st
   )
 }
 
-export function QyronAnimatedOrb(props) {
-  return <QyronStaticOrb {...props} />
-}
-
-export default function QyronOrb({ animated = false, ...props }) {
-  return <QyronStaticOrb {...props} />
-}
-
-
 
