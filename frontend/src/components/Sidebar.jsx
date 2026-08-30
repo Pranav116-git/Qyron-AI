@@ -32,6 +32,8 @@ export default function Sidebar({
   onClose,
   theme = 'dark',
   onToggleTheme,
+  userName: parentUserName,
+  onUpdateUserName,
 }) {
   const [hoveredId, setHoveredId] = useState(null)
   const [editingId, setEditingId] = useState(null)
@@ -40,12 +42,20 @@ export default function Sidebar({
 
   // User name state
   const [userName, setUserName] = useState(() => {
+    if (parentUserName !== undefined) return parentUserName
     try {
       return localStorage.getItem('qyron-user-name') || ''
     } catch {
       return ''
     }
   })
+
+  useEffect(() => {
+    if (parentUserName !== undefined) {
+      setUserName(parentUserName)
+    }
+  }, [parentUserName])
+
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
 
@@ -132,6 +142,9 @@ export default function Sidebar({
       try {
         localStorage.setItem('qyron-user-name', trimmed)
       } catch {}
+      if (onUpdateUserName) {
+        onUpdateUserName(trimmed)
+      }
     }
     setIsEditingName(false)
   }

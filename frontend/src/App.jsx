@@ -78,6 +78,7 @@ export default function App() {
       return 'dark'
     }
   })
+  const [userName, setUserName] = useState(getUserName)
   const [conversations, setConversations] = useState(() => {
     const loaded = loadConversations()
     return loaded.map(conv => ({
@@ -434,6 +435,8 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        userName={userName}
+        onUpdateUserName={setUserName}
       />
 
       <main className="main">
@@ -445,6 +448,7 @@ export default function App() {
           onRegenerate={handleRegenerate}
           onEditMessage={handleEditMessage}
           formatTimestamp={formatTimestamp}
+          userName={userName}
         />
         <MessageInput onSend={handleSend} onStop={handleStop} disabled={loading} />
       </main>

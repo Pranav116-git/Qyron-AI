@@ -260,10 +260,12 @@ function EditableUserMessage({ content, onSave, onCancel }) {
   )
 }
 
-export default function ChatArea({ messages, loading, error, onPromptClick, onRegenerate, onEditMessage, formatTimestamp }) {
+export default function ChatArea({ messages, loading, error, onPromptClick, onRegenerate, onEditMessage, formatTimestamp, userName }) {
   const bottomRef = useRef(null)
   const isEmpty = messages.length === 0
   const [editingIndex, setEditingIndex] = useState(null)
+
+  const userInitial = userName && userName.trim() ? userName.trim().charAt(0).toUpperCase() : 'U'
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -354,7 +356,7 @@ export default function ChatArea({ messages, loading, error, onPromptClick, onRe
             <div key={i} className={`message ${msg.role}`}>
               <div className="message-avatar">
                 {msg.role === 'user' ? (
-                  <span className="user-avatar-text">U</span>
+                  <span className="user-avatar-text">{userInitial}</span>
                 ) : (
                   <QyronStaticOrb size={28} className="assistant-orb-avatar" alt="Qyron AI" state={isLastAssistant && loading ? 'thinking' : 'idle'} />
                 )}
